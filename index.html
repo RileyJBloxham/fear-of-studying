@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Untitled</title>
+  
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Fear Action Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+        .node {
+            background-color: #e0f2fe;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .node:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .flow-line {
+            position: absolute;
+            width: 2px;
+            background-color: #60a5fa;
+            z-index: -1;
+        }
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+            max-width: 400px;
+            text-align: center;
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div class="overlay" id="overlay"></div>
+    <div class="message-box" id="message-box">
+        <h3 id="message-title" class="text-xl font-bold mb-2"></h3>
+        <p id="message-content" class="text-gray-700"></p>
+        <button id="message-ok" class="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-600 transition-colors mt-4">Got it</button>
+    </div>
+
+    <div class="container bg-white p-8 rounded-2xl shadow-lg">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Study Fear Action Guide</h1>
+        <p class="text-center text-gray-600 mb-8">Click on the boxes to guide yourself through the process.</p>
+
+        <div id="flowchart" class="relative flex flex-col items-center">
+            
+            <!-- Level 1: Start -->
+            <div id="start-node" class="node bg-indigo-200 text-indigo-800 w-2/3">Feeling Stressed about Studying?</div>
+
+            <!-- Level 2: Yes/No -->
+            <div id="yes-no-line" class="flow-line h-8 mt-4 hidden"></div>
+            <div id="yes-no-container" class="flex w-full justify-around mt-4 hidden">
+                <div id="yes-node" class="node bg-red-200 text-red-800 w-1/3 mx-2">Yes</div>
+                <div id="no-node" class="node bg-green-200 text-green-800 w-1/3 mx-2">No</div>
+            </div>
+
+            <!-- Level 3: Call Someone? -->
+            <div id="call-line" class="flow-line h-8 mt-4 hidden"></div>
+            <div id="call-container" class="flex w-full justify-around mt-4 hidden">
+                <div id="call-yes" class="node bg-yellow-200 text-yellow-800 w-1/3 mx-2">Yes</div>
+                <div id="call-no" class="node bg-yellow-200 text-yellow-800 w-1/3 mx-2">No</div>
+            </div>
+
+            <!-- Level 4: Choose a Method -->
+            <div id="method-line" class="flow-line h-8 mt-4 hidden"></div>
+            <div id="method-container" class="flex w-full justify-around mt-4 hidden">
+                <div id="mindset-node" class="node bg-blue-200 text-blue-800 w-1/2 mx-2">Path A: Mindset Shift</div>
+                <div id="exposure-node" class="node bg-purple-200 text-purple-800 w-1/2 mx-2">Path B: Gradual Exposure</div>
+            </div>
+
+            <!-- Dynamic Step Containers -->
+            <div id="step-container" class="flex flex-col items-center w-full mt-4"></div>
+
+            <!-- Start Over Button -->
+            <button id="start-over-btn" class="hidden bg-gray-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-600 transition-colors mt-8">Start Over</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const flowchart = document.getElementById('flowchart');
+            const startNode = document.getElementById('start-node');
+            const yesNoContainer = document.getElementById('yes-no-container');
+            const yesNode = document.getElementById('yes-node');
+            const noNode = document.getElementById('no-node');
+            const callContainer = document.getElementById('call-container');
+            const callYesNode = document.getElementById('call-yes');
+            const callNoNode = document.getElementById('call-no');
+            const methodContainer = document.getElementById('method-container');
+            const mindsetNode = document.getElementById('mindset-node');
+            const exposureNode = document.getElementById('exposure-node');
+            const stepContainer = document.getElementById('step-container');
+            const startOverBtn = document.getElementById('start-over-btn');
+
+            const messageBox = document.getElementById('message-box');
+            const messageTitle = document.getElementById('message-title');
+            const messageContent = document.getElementById('message-content');
+            const messageOk = document.getElementById('message-ok');
+            const overlay = document.getElementById('overlay');
+
+            let currentState = { path: null, step: 0 };
+
+            const stepsData = {
+                mindset: [
+                    {
+                        title: "Step 1: Acknowledge & Breathe",
+                        content: "Take a moment to be present. Before you begin, focus on your breathing to calm your nervous system. This brief pause acts as your 'habit stacking cue,' signaling the start of your productive routine. Just a few deep breaths can make a significant difference."
+                    },
+                    {
+                        title: "Step 2: Visualize Success",
+                        content: "Close your eyes and visualize a positive outcome, such as successfully completing this study session or feeling confident about an upcoming exam. This primes your brain for success and reinforces your goals."
+                    },
+                    {
+                        title: "Step 3: Clock In",
+                        content: "Adopt a 'clocking in' mindset, as if you're starting a work shift. This mental shift helps separate your study time from your personal time. To reinforce this, put your phone on silent and place it out of sight to remove distractions."
+                    },
+                    {
+                        title: "Step 4: Countdown & Get Started!",
+                        content: "This is the final, powerful trigger to begin. Say aloud '5, 4, 3, 2, 1' to transition from preparing to doing. Use this verbal command to launch into action and start your first study task. You can do it!"
+                    }
+                ],
+                exposure: [
+                    {
+                        title: "Step 1: Set the Scene",
+                        content: "Create an optimal study environment. Put on music that aids concentration, change into clean clothes to signal the start of a new activity, and grab a healthy snack and water to prevent physical distractions."
+                    },
+                    {
+                        title: "Step 2: Pre-Journaling",
+                        content: "Before you begin, take 10 minutes to journal. Write down your 'why' to reaffirm your resolve and remind yourself of the reasons and importance of studying. Then, set a micro-goal for the session (e.g., 'I will read the first two pages')."
+                    },
+                    {
+                        title: "Step 3: Break it Down",
+                        content: "Don't look at the entire study session as one large, intimidating block. Instead, break it down into smaller, less intimidating steps. For example, if you need to study a chapter, break it down by sections."
+                    },
+                    {
+                        title: "Step 4: Confront a Micro-Step",
+                        content: "Choose the smallest, least intimidating step you identified in the previous step and start with that. This is the core of graded exposure—by tackling the easiest part, you'll build confidence."
+                    },
+                    {
+                        title: "Step 5: Reward Yourself",
+                        content: "After completing a small step, take a brief break or acknowledge your progress. This reinforces the positive behavior and makes the process feel more manageable and rewarding."
+                    }
+                ]
+            };
+
+            function showMessage(title, content) {
+                messageTitle.textContent = title;
+                messageContent.textContent = content;
+                messageBox.style.display = 'flex';
+                overlay.style.display = 'block';
+            }
+
+            function hideMessage() {
+                messageBox.style.display = 'none';
+                overlay.style.display = 'none';
+            }
+
+            function resetFlowchart() {
+                document.querySelectorAll('.flow-line').forEach(line => line.classList.add('hidden'));
+                document.querySelectorAll('.node-group').forEach(group => group.classList.add('hidden'));
+                yesNoContainer.classList.add('hidden');
+                callContainer.classList.add('hidden');
+                methodContainer.classList.add('hidden');
+                stepContainer.innerHTML = '';
+                startOverBtn.classList.add('hidden');
+                startNode.classList.remove('hidden');
+            }
+
+            function createStepNode(path, index) {
+                const stepNode = document.createElement('div');
+                stepNode.id = `${path}-step-${index + 1}`;
+                stepNode.className = `node w-2/3 my-2 bg-${path === 'mindset' ? 'blue' : 'purple'}-200 text-${path === 'mindset' ? 'blue' : 'purple'}-800`;
+                stepNode.textContent = `${stepsData[path][index].title}`;
+                stepNode.onclick = () => {
+                    currentState.step = index;
+                    const stepDetails = stepsData[path][currentState.step];
+                    showMessage(stepDetails.title, stepDetails.content);
+                };
+                return stepNode;
+            }
+
+            messageOk.addEventListener('click', () => {
+                hideMessage();
+                if (currentState.path) {
+                    const nextStepIndex = currentState.step + 1;
+                    if (nextStepIndex < stepsData[currentState.path].length) {
+                        stepContainer.innerHTML = '';
+                        stepContainer.appendChild(createStepNode(currentState.path, nextStepIndex));
+                    } else {
+                        stepContainer.innerHTML = '';
+                        const doneMessage = document.createElement('p');
+                        doneMessage.textContent = "Great job! You've completed the guide. Now you're ready to get started.";
+                        doneMessage.className = "text-center text-lg font-semibold my-4";
+                        stepContainer.appendChild(doneMessage);
+                        startOverBtn.classList.remove('hidden');
+                        currentState = { path: null, step: 0 };
+                    }
+                }
+            });
+
+            startNode.addEventListener('click', () => {
+                startNode.classList.add('hidden');
+                document.getElementById('yes-no-line').classList.remove('hidden');
+                yesNoContainer.classList.remove('hidden');
+            });
+
+            yesNode.addEventListener('click', () => {
+                document.getElementById('yes-no-line').classList.add('hidden');
+                yesNoContainer.classList.add('hidden');
+                document.getElementById('call-line').classList.remove('hidden');
+                callContainer.classList.remove('hidden');
+            });
+
+            noNode.addEventListener('click', () => {
+                showMessage("Start Studying!", "You're not feeling stressed! Now is the perfect time to get started on your work.");
+                resetFlowchart();
+            });
+
+            callYesNode.addEventListener('click', () => {
+                showMessage("Talk it Out", "Do you need to talk to someone? Call a friend or a professional to help you process your emotions.");
+                document.getElementById('call-line').classList.add('hidden');
+                callContainer.classList.add('hidden');
+                document.getElementById('method-line').classList.remove('hidden');
+                methodContainer.classList.remove('hidden');
+            });
+            
+            callNoNode.addEventListener('click', () => {
+                document.getElementById('call-line').classList.add('hidden');
+                callContainer.classList.add('hidden');
+                document.getElementById('method-line').classList.remove('hidden');
+                methodContainer.classList.remove('hidden');
+            });
+
+            mindsetNode.addEventListener('click', () => {
+                methodContainer.classList.add('hidden');
+                document.getElementById('method-line').classList.add('hidden');
+                currentState.path = 'mindset';
+                stepContainer.appendChild(createStepNode('mindset', 0));
+            });
+
+            exposureNode.addEventListener('click', () => {
+                methodContainer.classList.add('hidden');
+                document.getElementById('method-line').classList.add('hidden');
+                currentState.path = 'exposure';
+                stepContainer.appendChild(createStepNode('exposure', 0));
+            });
+
+            startOverBtn.addEventListener('click', resetFlowchart);
+        });
+    </script>
+</body>
+</html>
+<!-- partial -->
+  
+</body>
+</html>
